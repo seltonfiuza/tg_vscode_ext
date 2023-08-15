@@ -16,12 +16,26 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "terragrunt-plan" is now active!');
 	
-	context.subscriptions.push(vscode.commands.registerCommand('terragrunt.plan', async (uri:vscode.Uri) => {
+	context.subscriptions.push(vscode.commands.registerCommand('tg.plan', async (resource: vscode.Uri) => {
 
-		if (!checkForTerragruntHclFile(uri.path)) {
+        let workDir: string = "";
+		if (resource && resource.scheme === 'file' && !checkForTerragruntHclFile(resource.path)) {
 			vscode.window.showErrorMessage('Not a Terragrunt project.');
-			return
+            workDir = resource.path;
+			return false;
 		}
+        if (workDir === '') {
+            const activeEditor = vscode.window.activeTextEditor;
+            if (activeEditor) {
+                workDir = path.dirname(activeEditor.document.uri.fsPath);
+                const extension = path.extname(path.basename(activeEditor.document.uri.fsPath));
+                if (extension !== '.hcl') {
+                    vscode.window.showErrorMessage('Selected file is not a .hcl file.');
+                    return;
+                }
+            }
+        }
+        
 		const awsProfiles: string[] = await getAwsProfiles();
 
 		const quickPickItems = awsProfiles.map(profile => ({
@@ -39,18 +53,17 @@ export function activate(context: vscode.ExtensionContext) {
             // Here you can use the selected profile for your AWS operations.
         } else {
             vscode.window.showErrorMessage('No profile selected.');
-			return
+			return false;
         }
-
-		// let folderName = uri.path.split('/')[uri.path.split('/').length - 1];
 
 		let terminalWindow = vscode.window.createTerminal(`Tg Plan #${NEXT_TERM_ID++}`);
 
-		terminalWindow.sendText(`cd ${uri.path}\r\n`)
-		terminalWindow.sendText(`terragrunt plan\r\n`)
+        terminalWindow.sendText(`export AWS_PROFILE=${profile.label}`);
+		terminalWindow.sendText(`cd ${workDir}\r\n`);
+		terminalWindow.sendText(`terragrunt plan\r\n`);
 
 		if (ensureTerminalExists()) {
-			terminalWindow.show()
+			terminalWindow.show();
 		}
 	}));
 }

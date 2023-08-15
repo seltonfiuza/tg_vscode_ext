@@ -7,7 +7,7 @@
 		"url": "https://github.com/seltonfiuza/tg_vscode_ext"
 	},
   "description": "Plan Terragrunt Projects",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.81.0"
@@ -32,16 +32,23 @@
             "when": "explorerResourceIsFolder"
         }
       ],
+      "editor/context": [
+        {
+            "group": "terragrunt",
+            "submenu": "terragrunt.submenu",
+            "when": "explorerResourceIsFolder"
+        }
+      ],
       "terragrunt.submenu": [
         {
-          "command": "terragrunt.plan"
+          "command": "tg.plan"
         }
       ]
     },
     "commands": [
       {
-        "command": "terragrunt.plan",
-        "title": "Plan"
+        "command": "tg.plan",
+        "title": "Terragrunt: plan"
       }
     ]
   },
